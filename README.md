@@ -46,10 +46,3 @@ The current gateway does **not** enforce a protected service boundary: an untrus
 
 See [security notes](GATEWAY_SECURITY_NOTES.md), [research scope](FINAL_SCOPE.md), [layer usage](README_LAYER.md), and [PyPI publishing](PUBLISHING.md).
 
-## Project status
-
-- Latest source release: `v1.0.0rc1` (experimental).
-- 48 tests passed in the local source-release evaluation.
-- PyPI **not yet published**; build, TestPyPI and name availability must be checked.
-- Independent mitigation validated: **NO**.
-- Production deployment ready: **NO**.
