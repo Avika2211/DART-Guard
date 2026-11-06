@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dartguard-research"
+version = "1.0.0rc1"
+description = "Research-grade fail-closed decision verification for neural agent execution"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "DART-Guard research contributors"}]
+classifiers = [
+ "Development Status :: 3 - Alpha",
+ "Programming Language :: Python :: 3",
+ "Topic :: Scientific/Engineering :: Artificial Intelligence",
+ "Topic :: Security",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "build>=1.0", "twine>=5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
