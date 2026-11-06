@@ -13,3 +13,5 @@ from .layer import DARTGuard, pytorch_probability_adapter
 __all__ += ['DARTGuard', 'pytorch_probability_adapter']
 
 from .gateway import ExecutionGateway, Permit
+
+from .trusted_service import TrustedDecisionService, BoundPermit
