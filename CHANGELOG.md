@@ -1,8 +1,8 @@
-# Changes in hardened research prototype
+# DART-Guard changelog
 
-- Added strict canonical JSON and duplicate-key rejection for permits.
-- Added payload size and expiry/nonce validation.
-- Added HMAC-SHA256 permit binding for principal, action ID and exact action arguments.
-- Added SQLite atomic replay-claim handling persisting across service object reinitialization.
-- Added concurrent replay, tampering, persistence, argument-binding and malformed-input regression tests.
-- Consolidated security and README limitations. No production certification is claimed.
+## 1.1.0rc1 — Linux service research candidate
+- Added Linux Unix-domain socket gateway with SO_PEERCRED UID verification.
+- Added server-owned models, policies, action allowlists and internal permits.
+- Added unit/integration tests and same-UID separate-process demonstration.
+- Preserved existing HMAC argument binding, durable SQLite replay claims and limitations.
+- Clearly documented what remains outside production security assurance.

@@ -1,49 +1,44 @@
-# DART-Guard — Hardened research prototype
+# DART-Guard — Linux service research candidate
 
-**DART-Guard (Decision Assurance and Runtime Trust Guard)** is a model-agnostic runtime decision-protection layer for neural System-1 decision models. It checks the primary prediction, a secondary verifier prediction, and authorization before allowing `EXECUTE`. An optional reference execution service issues short-lived permits.
+**Decision Assurance and Runtime Trust Guard** investigates runtime containment of silent numerical faults that change neural System-1 decision outputs. This repository contains a model-agnostic Python decision-protection wrapper and a Linux Unix-domain-socket gateway **reference implementation**.
 
-**Research proof of concept only:** not production-certified, not hardware fault-isolated, and not validated on live operational authorization policies. Current evaluation assumes an uncorrupted verifier; correlated failures can defeat the mechanism.
+**Status:** Research prototype, version **1.1.0rc1**. NOT security-certified or qualified for production use.
 
-## Quick start
+## Install, test and demo
 
-```bash
+\`\`\`bash
 python -m pip install -e '.[dev]'
 python -m pytest -q
-```
+python examples/unix_gateway_demo.py
+\`\`\`
 
-```python
-from dartguard import DARTGuard, Authorization
+77+ tests were run locally on the source release candidate (79 passed in the latest local run). That demonstrates tested software behavior, not hardware fault isolation or external security validation.
 
-guard = DARTGuard(
-    model=lambda state: state['primary_probability'],
-    verifier=lambda state: state['secondary_probability'],
-    authorization=lambda ctx: Authorization(ctx['permitted'], ctx['fresh']),
-)
-result = guard.predict(
-    {'primary_probability': 0.9, 'secondary_probability': 0.2},
-    {'permitted': True, 'fresh': True},
-)
-assert result.final.value != 'EXECUTE'
-```
+## Architecture
 
-The example uses in-process callbacks to demonstrate the API, **not independent security services**. Only the guarded decision should reach the executor.
+1. A server-owned primary neural decision function proposes an action.
+2. A separately defined verifier cross-checks the proposal.
+3. Trusted policy verifies authenticated OS peer UID, the allowlisted action, and server-owned authorization/freshness conditions.
+4. Successful EXECUTE requests are covered by short-lived HMAC-SHA256 permits binding peer principal, action ID and canonicalized action arguments.
+5. SQLite atomically claims each permit nonce before invoking the allowlisted executor. Failed checks return a fail-closed denial.
 
-## Hardened trusted-service reference
+The client cannot submit approval flags, arbitrary Python callbacks or a signing key. Linux SO_PEERCRED identifies the local peer process UID.
 
-`TrustedDecisionService` binds signed permits to the **principal, action ID, and exact canonical JSON arguments**, uses HMAC-SHA256, and atomically records permit nonces in SQLite for replay prevention (including after reinitialization against the same database). It rejects invalid/duplicate-key/noncanonical/nonfinite or oversized JSON and premature/expired permits.
+## Practical integration
 
-**Critical limitation:** This class does not create a protected service boundary. Principal and policy context must come from trusted authenticated infrastructure, and the signing secret, verifier, replay database, and executor must be isolated from untrusted agents. SQLite replay claims prevent duplicate *attempts*, not exactly-once external side effects. The older `ExecutionGateway` is retained only for backward compatibility.
+The source package exports \`DARTGuard\`, \`Authorization\`, \`TrustedDecisionService\`, and the Linux-only module \`dartguard.unix_service\` containing \`ProtectedGateway\`, \`UnixGatewayServer\`, and \`call_gateway\`. The legacy \`ExecutionGateway\` remains for compatibility but is not the security reference.
 
-## Controlled experimental evidence
+See \`DEPLOYMENT_BOUNDARIES.md\` and \`SECURITY.md\` for threat assumptions and non-claims. The sample models and policies are synthetic demonstrators, **not a production authentication or authorization source**.
 
-In the previously reported trained System-1 proxy experiment, 6,300 primary-only FP32 fault attempts produced 109 non-EXECUTE → EXECUTE transitions. Under a clean verifier, the prototype permitted **0/109**; when the verifier shared corruption, **85** authorization-permitted transitions passed. Authorization labels were synthetic; these do not represent independently labeled real-world unsafe actions.
+## Experimental scope
 
-## Repository contents
+Separate controlled checkpoint experiments recorded 6,300 primary-only FP32 fault attempts, with 109 new EXECUTE transitions rejected under a clean verifier; 85 new EXECUTE transitions passed under shared corruption. These numbers represent model-level experiments with synthetic authorization labels, not a production incident rate.
 
-- `src/dartguard/`: protection wrapper, verifier adapter, policy, prototype gateways and trusted-service reference
-- `tests/`: 67-test local regression suite, including replay, concurrency and permit tampering
-- `examples/`: sample integration
-- `SECURITY.md`, `SECURITY_BOUNDARIES.md`: threat assumptions, excluded security guarantees
-- `PUBLISHING.md`: packaging instructions
+Research evaluation also used externally sourced tau3-bench tasks and Gymnasium Taxi/MiniGrid environments. The benchmark reports do not establish independent verifier hardware isolation or superiority over all simpler methods. Full DART-Guard matched verifier-only in the tau3 and Taxi experiments.
 
-**Do not market this as a production-certified agent security gateway.** See the security documents for the explicitly unverified assumptions. No PyPI publication is claimed.
+## Responsible claims
+
+- **Demonstrated:** Research-level decision gate, Linux process-boundary demo, argument-bound HMAC permits, SQLite replay claims, local automated tests.
+- **Not demonstrated:** Fault-domain independent verifier, production non-bypassability, external security certification, malicious-compromise resistance under same UID, operational authorization correctness.
+
+For reproducibility and related literature, see the accompanying manuscript draft and \`paper/RELATED_WORK.md\`.
